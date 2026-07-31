@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Dashboard & Support</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input, textarea, button { display: block; margin-top: 10px; width: 100%; padding: 10px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        pre { background: #1e1e1e; color: #00ff66; padding: 12px; border-radius: 4px; overflow-x: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <h2>CRM Support Desk Testing UI</h2>
+
+    <!-- Create Ticket Section -->
+    <div class="card">
+        <h3>1. Create Ticket (Auto NLP Classification)</h3>
+        <input type="number" id="customerId" placeholder="Customer ID (e.g., 1)" value="1">
+        <textarea id="issueText" placeholder="Enter issue (e.g., Payment failed / App crash)"></textarea>
+        <button onclick="createTicket()">Submit Ticket</button>
+        <pre id="ticketResult">Result will appear here...</pre>
+    </div>
+
+    <!-- AI Chatbot Section -->
+    <div class="card">
+        <h3>2. AI Chatbot</h3>
+        <input type="text" id="chatMsg" placeholder="Ask something (e.g., working hours, refund)">
+        <button onclick="askChatbot()">Send Message</button>
+        <pre id="chatResult">Bot response will appear here...</pre>
+    </div>
+
+    <!-- View Dashboard Section -->
+    <div class="card">
+        <h3>3. Realtime Dashboard</h3>
+        <button onclick="getDashboard()">Refresh Dashboard Data</button>
+        <pre id="dashResult">Click to load dashboard data...</pre>
+    </div>
+
+    <script>
+        async function createTicket() {
+            const customerIdInput = document.getElementById('customerId').value;
+            const issueInput = document.getElementById('issueText').value;
+
+            // Basic Input Validation
+            if (!customerIdInput || !issueInput.trim()) {
+                alert("Please fill both Customer ID and Issue description!");
+                return;
+            }
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/ticket', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        customer_id: parseInt(customerIdInput), 
+                        issue: issueInput 
+                    })
+                });
+                
+                const data = await res.json();
+                document.getElementById('ticketResult').innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('ticketResult').innerText = "Error: " + err.message + "\n(Make sure Flask server is running & CORS is enabled)";
+            }
+        }
+
+        async function askChatbot() {
+            const messageInput = document.getElementById('chatMsg').value;
+
+            if (!messageInput.trim()) {
+                alert("Please enter a message for the chatbot!");
+                return;
+            }
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/chatbot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: messageInput })
+                });
+
+                const data = await res.json();
+                document.getElementById('chatResult').innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('chatResult').innerText = "Error: " + err.message;
+            }
+        }
+
+        async function getDashboard() {
+            try {
+                const res = await fetch('http://127.0.0.1:5000/dashboard');
+                const data = await res.json();
+                document.getElementById('dashResult').innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('dashResult').innerText = "Error: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
